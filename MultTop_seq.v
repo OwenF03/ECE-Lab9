@@ -20,17 +20,20 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module MultTop(input wire clk, input wire reset, input wire [7:0] a, input wire [7:0] b, 
+module MultTop_seq(input wire clk, input wire reset, input wire m_enable, input wire [7:0] a, input wire [7:0] b, 
                output wire [3:0] an, output wire [7:0] seg);
     
     wire rdy;
     reg [15:0] latched_BCD; //Supply multi_driver with accurate BCD value
     wire [15:0] mult_out; 
-    combo_mult ComboMultiplier(.a(a), .b(b), .res(mult_out));
+    
+    wire convert_en; 
+    //always enabled
+    Seq_Mult SeqMultiplier(.A(a), .B(b), .rst(reset), .clk(clk), .enable(m_enable), .res(mult_out), .ready(convert_en));
     
     //Convert multiplier output to BCD
     wire [19:0] BCD_out; 
-    COUNT_BCD converter(.clk(clk), .reset(reset), .en(1), .count(mult_out), .BCD(BCD_out), .rdy(rdy));
+    COUNT_BCD converter(.clk(clk), .en(convert_en), .reset(reset), .count(mult_out), .BCD(BCD_out), .rdy(rdy));
     
     // Wait to set value utnil it is ready
     always @(posedge clk or posedge reset) begin

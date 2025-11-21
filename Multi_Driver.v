@@ -1,8 +1,6 @@
 `timescale 1ns / 1ps
 `default_nettype none
 
-
-
 module Multi_Driver(
     input wire clk, 
     input wire [15:0] sw,

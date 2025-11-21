@@ -31,6 +31,7 @@
 module COUNT_BCD(
     input wire clk,  
     input wire reset, 
+    input wire en, // Enable 
     input wire [15:0] count, 
     output reg [19:0] BCD,
     output reg rdy
@@ -59,14 +60,15 @@ module COUNT_BCD(
         else begin
             case(state)
                 IDLE : begin // Wait for new value to convert
-                    if(count_p != count) begin //Prepare for new calculation
+                    if((count_p != count) && en) begin //Prepare for new calculation
+                        rdy <= 0;
                         BCD <= 0; //Reset BCD
                         count_p <= count; //Latch counter value 
                         shift_idx <= 0; //reset shift index
                         state <= SHIFT; // Become non idle when a new value arrives
                     end 
                     else state <= IDLE; //Otherwise keep in idle
-                    rdy <= 1; //Result is ready until no longer idle
+                    rdy <= 0; //Ready already asserted, keep low
                 end
                 SHIFT : begin //Shift value in 
                     BCD <= {BCD[18:0], count_p[15 - shift_idx]}; //Shift in new value

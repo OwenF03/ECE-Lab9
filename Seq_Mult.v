@@ -22,11 +22,11 @@
 
 
 module Seq_Mult(
-        input [7:0] A,
-        input [7:0] B,
-        input clk,
-        input rst,
-        input enable,
+        input wire [7:0] A,
+        input wire [7:0] B,
+        input wire clk,
+        input wire rst,
+        input wire enable,
         output reg [15:0] res,
         output reg ready
     );
@@ -53,10 +53,20 @@ module Seq_Mult(
     
     
     
-    always@(posedge clk or posedge rst) begin
+    always@(posedge clk) begin
+        if(rst == 1) begin
+            count <= 0;
+            temp_output <= 0;
+            res <= 0;
+            ready <= 0;
+            ns <= 0;
+            Multiplier <= 0;
+            Multiplicand <= 0;
+        end
+        else begin
+       
         case(state)
             idle: begin
-            if(!rst) begin
                 count <= 0;
                 temp_output <= 0;
                 
@@ -68,28 +78,17 @@ module Seq_Mult(
 
                 Multiplier[7:0] <= A;
                 Multiplicand <= B;
+                res <= res; 
                 
                 end
-            else begin
-                state <= 0;
-                count <= 0;
-                temp_output <= 0;
-                res <= 0;
-                ready <= 0;
-                ns <= 0;
-                Multiplier <= 0;
-                Multiplicand <= 0;
-                end
-            end
             
             multiplying: begin
-            if(!rst) begin
                 ready <= 0;
                 if(Multiplicand[0])
                     temp_output = temp_output + Multiplier;
                 
                 Multiplier <= Multiplier << 1;
-                Multiplicand <= {0, Multiplicand[7:1]};
+                Multiplicand <= {1'b0, Multiplicand[7:1]};
                 
                 if(count == 3'b111)
                     ns<=done;
@@ -99,21 +98,7 @@ module Seq_Mult(
                 end
                 
                 end
-            else begin
-                state <= 0;
-                count <= 0;
-                temp_output <= 0;
-                res <= 0;
-                ready <= 0;
-                ns <= 0;
-                Multiplier <= 0;
-                Multiplicand <= 0;
-                end
-            end
-            
-            
             done: begin
-            if(!rst) begin
                 res <= temp_output;
                 ready <= 1;
                 count <= 0;
@@ -124,20 +109,8 @@ module Seq_Mult(
                 
                 
                 end
-            else begin
-                state <=0;
-                count <= 0;
-                temp_output <= 0;
-                res <= 0;
-                ready <= 0;
-                ns <= 0;
-                Multiplier <= 0;
-                Multiplicand <= 0;
-                end
-            end
             
             default begin
-                state <= 0;
                 count <= 0;
                 temp_output <= 0;
                 res <= 0;
@@ -149,10 +122,12 @@ module Seq_Mult(
             
      
         endcase
+        end
     end
     
     always@(negedge clk) begin
-        state <= ns;
+        if(rst) state <= 0; 
+        else state <= ns;
     end
     
     
